@@ -7,4 +7,4 @@ class ParkingLot(db.Model):
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(255), nullable=False)
 
-    spots = db.relationship('ParkingSpot', backref='lot', cascade="all, delete-orphan")
+    spots = db.relationship('ParkingSpot', backref='lot', cascade="all, delete-orphan") # one-to-many relationship with ParkingSpot

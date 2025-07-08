@@ -15,6 +15,7 @@ from models.reservation import Reservation
 
 from routes.auth import auth_bp
 
+# Initialize Flask app and configure it
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -26,18 +27,17 @@ db.init_app(app)
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
 
-#* before:
+#* register route blueprints
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(admin_bp, url_prefix="/api/admin") 
 app.register_blueprint(user_bp, url_prefix="/api/user")
-#* after:
-# app.register_blueprint(admin_bp, url_prefix="/api/auth")
 
 if __name__ == "__main__":
     with app.app_context():
         db.drop_all()
         db.create_all()
 
+        # Initialize the database and create an admin user
         admin = User(email='admin@admin.com', password=bcrypt.generate_password_hash('admin123').decode('utf-8'), role='admin')
         db.session.add(admin)
         db.session.commit()

@@ -7,4 +7,4 @@ class ParkingSpot(db.Model):
     lot_id = db.Column(db.Integer, db.ForeignKey('parking_lots.id'), nullable=False)
     status = db.Column(db.String(1), nullable=False, default='A')  # 'A' = available, 'O' = occupied
 
-    reservation = db.relationship('Reservation', backref='spot', uselist=False)
+    reservation = db.relationship('Reservation', backref='spot', uselist=False) # one-to-one relationship with Reservation
