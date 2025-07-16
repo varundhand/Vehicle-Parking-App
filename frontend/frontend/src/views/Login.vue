@@ -32,13 +32,14 @@ const login = async () => {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message)
-
+console.log('data.accesstoken', data.access_token)
     auth.setToken(data.access_token)
     console.log("this is the data from login function -> ",data);
     
     auth.setUser(data)
 
-    router.push(data.role === 'admin' ? '/admin' : '/user')
+    // router.push(data.role === 'admin' ? '/admin' : '/user')
+    router.push({path: data.role === 'admin' ? 'admin' : 'user'})
   } catch (err) {
     error.value = err.message
   }

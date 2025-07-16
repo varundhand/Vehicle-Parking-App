@@ -22,7 +22,7 @@ def reserve_spot():
 
     available_spot = ParkingSpot.query.filter_by(lot_id=lot_id, status='A').first()
     if not available_spot:
-        return jsonify({"message": "No spots available"}), 404
+        return jsoniwday({"message": "No spots available"}), 404
 
     available_spot.status = 'O'
     reservation = Reservation(user_id=user_id, spot_id=available_spot.id)
@@ -63,3 +63,17 @@ def cancel_reservation():
     db.session.commit()
 
     return jsonify({"message": "Reservation cancelled"}), 200
+
+# Get all parking lots for the user
+@user_bp.route('/parking-lots', methods=['GET'])
+@jwt_required()
+def get_parking_lots_for_user():
+    lots = ParkingLot.query.all()
+    return jsonify([
+        {
+            "id": lot.id,
+            "name": lot.name,
+            "location": lot.location
+        }
+        for lot in lots
+    ]), 200
