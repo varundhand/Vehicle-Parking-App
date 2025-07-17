@@ -54,9 +54,10 @@ onMounted(() => {
 
 const fetchUsers = async () => {
   try {
+    const token = localStorage.getItem('token')
     const res = await fetch('http://127.0.0.1:5000/api/admin/users', {
       headers: {
-        Authorization: `Bearer ${auth.token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
@@ -68,9 +69,10 @@ const fetchUsers = async () => {
 
 const fetchLots = async () => {
   try {
+    const token = localStorage.getItem('token')
     const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
       headers: {
-        Authorization: `Bearer ${auth.token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
@@ -87,10 +89,11 @@ const selectLot = (lot) => {
 
 const addSpot = async () => {
   try {
+    const token = localStorage.getItem('token')
     const res = await fetch(`http://127.0.0.1:5000/api/admin/parking-spots`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${auth.token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

@@ -52,7 +52,13 @@ const fetchParkingLots = async () => {
 //   }
 // })
 
-onMounted(() => fetchParkingLots());
+onMounted(() => {
+  if (!auth.token) {
+    auth.token = localStorage.getItem('token')
+  }
+  fetchParkingLots()
+})
+
 
 const logout = () => {
   auth.logout()

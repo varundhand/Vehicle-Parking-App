@@ -41,7 +41,7 @@ const register = async () => {
     auth.setToken(data.access_token)
     auth.setUser(data)
 
-    router.push(data.role === 'admin' ? '/admin' : '/user')
+    router.push({path: data.role === 'admin' ? 'admin' : 'user'})
   } catch (err) {
     error.value = err.message
   }

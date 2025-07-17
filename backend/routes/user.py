@@ -11,20 +11,32 @@ user_bp = Blueprint('user', __name__)
 @user_bp.route('/reserve', methods=['POST'])
 @jwt_required()
 def reserve_spot():
+    # json body stored from post request
     data = request.json
+
+    # extract user identity from JWT
     identity = get_jwt_identity()
+
+    # extract user ID from identity so we can use it to query the database
     user_id = identity['id']
+
+    # extract lot_id from the request data
     lot_id = data.get('lot_id')
 
+    # checks if the user already has a reservation
     existing = Reservation.query.filter_by(user_id=user_id).first()
+    
+    #  to prevent multiple reservations by the same user
+    #  even tho database allows one to many relationship of user to reservation, but the business logic requires only one reservation per user
     if existing:
         return jsonify({"message": "You already have a reservation"}), 400
 
     available_spot = ParkingSpot.query.filter_by(lot_id=lot_id, status='A').first()
     if not available_spot:
-        return jsoniwday({"message": "No spots available"}), 404
+        return jsonify({"message": "Spot not available"}), 404
 
     available_spot.status = 'O'
+
     reservation = Reservation(user_id=user_id, spot_id=available_spot.id)
     db.session.add(reservation)
     db.session.commit()

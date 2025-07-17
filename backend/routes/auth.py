@@ -24,7 +24,17 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+    # 👇 Add this part to generate token & return user info
+    access_token = create_access_token(identity=new_user.id)
+
+    return jsonify({
+        "access_token": access_token,
+        "id": new_user.id,
+        "email": new_user.email,
+        "full_name": new_user.full_name,
+        "role": new_user.role
+    }), 201
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
