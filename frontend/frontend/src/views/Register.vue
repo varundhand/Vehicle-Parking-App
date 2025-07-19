@@ -37,7 +37,6 @@ const register = async () => {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message)
-
     auth.setToken(data.access_token)
     auth.setUser(data)
 

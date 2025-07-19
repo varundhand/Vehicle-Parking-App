@@ -1,3 +1,4 @@
+# import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db
@@ -24,7 +25,7 @@ def reserve_spot():
     lot_id = data.get('lot_id')
 
     # checks if the user already has a reservation
-    existing = Reservation.query.filter_by(user_id=user_id).first()
+    existing = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
     
     #  to prevent multiple reservations by the same user
     #  even tho database allows one to many relationship of user to reservation, but the business logic requires only one reservation per user
@@ -48,7 +49,7 @@ def reserve_spot():
 def view_reservation():
     identity = get_jwt_identity()
     user_id = identity['id']
-    reservation = Reservation.query.filter_by(user_id=user_id).first()
+    reservation = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
 
     if not reservation:
         return jsonify({"message": "No reservation found"}), 404
@@ -65,13 +66,15 @@ def view_reservation():
 def cancel_reservation():
     identity = get_jwt_identity()
     user_id = identity['id']
-    reservation = Reservation.query.filter_by(user_id=user_id).first()
+    reservation = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
 
     if not reservation:
         return jsonify({"message": "No active reservation"}), 404
 
     reservation.spot.status = 'A'
-    db.session.delete(reservation)
+    reservation.is_active = False
+    reservation.leaving_timestamp = db.func.now()  
+    # db.session.delete(reservation)
     db.session.commit()
 
     return jsonify({"message": "Reservation cancelled"}), 200

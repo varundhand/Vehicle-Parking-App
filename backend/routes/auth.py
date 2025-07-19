@@ -48,7 +48,7 @@ def login():
 
     token = create_access_token(identity={"id": user.id, "role": user.role})
 
-    return jsonify({"access_token": token, "role": user.role}), 200
+    return jsonify({"access_token": token, "role": user.role, "name": user.full_name}), 200
 
 @auth_bp.route('/protected', methods=['GET'])
 @jwt_required()

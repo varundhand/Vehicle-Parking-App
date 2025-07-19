@@ -32,12 +32,18 @@ CORS(app, supports_credentials=True, origins=[
     "http://localhost:5188", 
     "http://localhost:5189", 
     "http://localhost:5190", 
+    "http://localhost:5191", 
+    "http://localhost:5192", 
+    "http://localhost:5193", 
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5180",
     "http://127.0.0.1:5187",  # 👈 Add both localhost and 127.0.0.1
     "http://127.0.0.1:5188",
     "http://127.0.0.1:5189",
     "http://127.0.0.1:5190",
+    "http://127.0.0.1:5191",
+    "http://127.0.0.1:5192",
+    "http://127.0.0.1:5193",
 ])
 # Initialize extensions
 db.init_app(app)

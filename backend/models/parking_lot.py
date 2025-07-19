@@ -8,3 +8,5 @@ class ParkingLot(db.Model):
     location = db.Column(db.String(255), nullable=False)
 
     spots = db.relationship('ParkingSpot', backref='lot', cascade="all, delete-orphan") # one-to-many relationship with ParkingSpot
+    def __repr__(self):
+        return f"<ParkingLot {self.id} - {self.name} at {self.location}>"

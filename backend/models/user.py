@@ -12,3 +12,6 @@ class User(db.Model):
     role = db.Column(db.String(10), nullable=False, default='user')  # 'admin' or 'user' # allows us to distinguish between admin and user roles
 
     reservations = db.relationship('Reservation', backref='user', lazy=True) # one-to-many relationship with Reservation
+
+    def __repr__(self):
+        return f"<User {self.id} - {self.email} ({self.role})>"
