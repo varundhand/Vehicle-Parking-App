@@ -53,7 +53,7 @@
           <strong>{{ lot.name }}</strong> - {{ lot.location }} (₹{{ lot.price || 'N/A' }})
           <button
             @click="reserveSpot(lot.id)"
-            :disabled="reservation "
+            :disabled="reservation"
             class="ml-4 bg-blue-500 text-white px-3 py-1 rounded"
           >
             Book
@@ -122,7 +122,10 @@ const fetchReservation = async () => {
 //   }
     if (res.ok){
         const data = await res.json()
-        reservation.value = data
+        console.log("data",data)
+        reservation.value = data.reservation
+        // reservation.
+        console.log("reservation ref",reservation)
     }else{
         reservation.value=null
     }

@@ -54,13 +54,15 @@ def view_reservation():
 
     
     if not reservation:
-        return jsonify({"message": "No active reservation", "reservation": None}), 200
+        return jsonify({"reservation": None}), 200
 
     return jsonify({
-        "spot_id": reservation.spot.id,
-        "lot_id": reservation.spot.lot.id,
-        "lot_name": reservation.spot.lot.name,
-        "status": reservation.spot.status
+        "reservation":{
+            "spot_id": reservation.spot.id,
+            "lot_id": reservation.spot.lot.id,
+            "lot_name": reservation.spot.lot.name,
+            "status": reservation.spot.status
+        }
     })
 
 @user_bp.route('/reservation', methods=['DELETE'])
