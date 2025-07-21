@@ -48,11 +48,13 @@ def reserve_spot():
 @jwt_required()
 def view_reservation():
     identity = get_jwt_identity()
+    print("indentity: ",identity)
     user_id = identity['id']
     reservation = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
 
+    
     if not reservation:
-        return jsonify({"message": "No reservation found"}), 404
+        return jsonify({"message": "No active reservation", "reservation": None}), 200
 
     return jsonify({
         "spot_id": reservation.spot.id,
@@ -78,6 +80,27 @@ def cancel_reservation():
     db.session.commit()
 
     return jsonify({"message": "Reservation cancelled"}), 200
+    
+# Get reservation history for the user
+@user_bp.route('/reservations/history', methods=['GET'])
+@jwt_required()
+def reservation_history():
+    identity = get_jwt_identity()
+    user_id = identity['id']
+    
+    history = Reservation.query.filter_by(user_id=user_id).order_by(Reservation.parking_timestamp.desc()).all()
+
+    result = []
+    for r in history:
+        result.append({
+            "id": r.id,
+            "location": r.spot.lot.location,
+            "vehicle_number": r.vehicle_number,
+            "timestamp": r.parking_timestamp.strftime('%Y-%m-%d %H:%M'),
+            "is_active": r.is_active
+        })
+    
+    return jsonify(result), 200
 
 # Get all parking lots for the user
 @user_bp.route('/parking-lots', methods=['GET'])
