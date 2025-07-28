@@ -1,18 +1,18 @@
 <template>
-  <div class="p-6">
-    <h2 class="text-2xl font-bold mb-6">📊 Admin Summary</h2>
+  <div class="container py-4">
+    <div class="clay-card p-4 mb-5">
+      <h2 class="mb-3 text-white">📊 Revenue by Parking Lot</h2>
+      <div style="height: 350px;">
+        <Pie :data="revenueChartData" :options="chartOptions" />
+      </div>
+    </div>
 
-    <!-- Revenue Chart -->
-    <section class="mb-12">
-      <h3 class="text-xl mb-2">Revenue per Parking Lot</h3>
-      <Pie :data="revenueChartData" :options="chartOptions" />
-    </section>
-
-    <!-- Availability Chart -->
-    <section>
-      <h3 class="text-xl mb-2">Availability Overview</h3>
-      <Bar :data="availabilityChartData" :options="chartOptions" />
-    </section>
+    <div class="clay-card p-4">
+      <h2 class="mb-3 text-white">📦 Spot Availability Overview</h2>
+      <div style="height: 400px;">
+        <Bar :data="availabilityChartData" :options="chartOptions" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -86,7 +86,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-section {
-  height: 400px;
+.clay-card {
+  background: #2b2b2b;
+  border-radius: 16px;
+  box-shadow: 8px 8px 20px #1c1c1c, -8px -8px 20px #3c3c3c;
+  color: white;
 }
 </style>

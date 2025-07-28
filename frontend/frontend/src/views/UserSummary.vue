@@ -1,13 +1,15 @@
 <template>
-  <div class="p-6">
-    <h2 class="text-2xl font-bold mb-6">📈 My Parking Summary</h2>
-
-    <section v-if="chartData">
-      <Bar :data="chartData" :options="chartOptions" />
-    </section>
-    <p v-else>No data available</p>
+  <div class="user-summary p-4">
+    <div class="clay-card">
+      <h2 class="text-light fs-4 fw-bold mb-4">📈 My Parking Summary</h2>
+      <section v-if="chartData">
+        <Bar :data="chartData" :options="chartOptions" />
+      </section>
+      <p v-else>No data available</p>
+    </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -72,6 +74,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+section {
+  height: 400px;
+}
+</style>
+
+
+<style scoped>
+.clay-card {
+  background: #2b2b3c;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 10px 10px 20px #1c1c2b, -10px -10px 20px #3a3a4a;
+}
 section {
   height: 400px;
 }

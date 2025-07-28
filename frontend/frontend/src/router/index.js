@@ -13,8 +13,8 @@ import { useAuthStore } from '../stores/auth'
 const routes = [
   // Auth
   { path: '/', redirect: '/login' },
-  { path: '/login', component: Login },
-  { path: '/register', component: Register },
+  { path: '/login',name: 'login', component: Login },
+  { path: '/register', name: 'register', component: Register },
 
   // Admin routes
   { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true, role: 'admin' } },

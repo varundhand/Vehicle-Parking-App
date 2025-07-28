@@ -1,28 +1,32 @@
 <template>
-  <div class="p-6 max-w-md mx-auto">
-    <h2 class="text-xl font-bold mb-4">Edit Profile</h2>
-    <form @submit.prevent="updateProfile">
-      <div class="mb-3">
-        <label>Email:</label>
-        <input v-model="email" class="input" type="email" disabled />
-      </div>
-      <div class="mb-3">
-        <label>Full Name:</label>
-        <input v-model="full_name" class="input" />
-      </div>
-      <div class="mb-3">
-        <label>Address:</label>
-        <input v-model="address" class="input" />
-      </div>
-      <div class="mb-3">
-        <label>Pincode:</label>
-        <input v-model="pincode" class="input" />
-      </div>
-      <button class="btn btn-blue" type="submit">Save</button>
-    </form>
-    <p v-if="message" class="mt-4 text-green-600">{{ message }}</p>
+  <div class="container mt-5">
+    <div class="clay-card p-4 mx-auto" style="max-width: 500px;">
+      <h3 class="text-white mb-4">✏️ Edit Profile</h3>
+      <form @submit.prevent="updateProfile" class="text-white">
+        <div class="mb-3">
+          <label class="form-label">Email:</label>
+          <input v-model="email" class="form-control" type="email" disabled />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Full Name:</label>
+          <input v-model="full_name" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Address:</label>
+          <input v-model="address" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Pincode:</label>
+          <input v-model="pincode" class="form-control" />
+        </div>
+        <button class="btn btn-success w-100">Save</button>
+      </form>
+      <p v-if="message" class="mt-3 text-success">{{ message }}</p>
+    </div>
   </div>
 </template>
+
+
 
 <script setup>
 import { ref } from 'vue'
@@ -72,18 +76,9 @@ const updateProfile = async () => {
 </script>
 
 <style scoped>
-.input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.375rem;
-}
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-}
-.btn-blue {
-  background-color: #3b82f6;
-  color: white;
+.clay-card {
+  background: #2b2b2b;
+  border-radius: 16px;
+  box-shadow: 8px 8px 20px #1c1c1c, -8px -8px 20px #3c3c3c;
 }
 </style>

@@ -11,6 +11,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "bootstrap": "^5.3.7",
     "chart.js": "^4.5.0",
     "latest": "^0.2.0",
     "n": "^10.2.0",

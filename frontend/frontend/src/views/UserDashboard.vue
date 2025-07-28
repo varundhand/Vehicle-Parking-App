@@ -1,72 +1,61 @@
 <template>
-  <div class="p-4">
-    <h2>Welcome, {{ user.name}}!</h2>
+  <div class="user-dashboard-wrapper p-4">
+    <h2 class="text-light fs-4 fw-bold mb-4">👋 Welcome, {{ user.name }}!</h2>
 
-    <!-- 🟦 Current Reservation (if any) -->
-    <section v-if="reservation">
-      <h3>🅿️ Your Active Reservation</h3>
-      <p>
-        Lot: {{ reservation.lot_name }}<br />
-        Spot ID: {{ reservation.spot_id }}<br />
-        Status: {{ reservation.status }}
-      </p>
-      <button @click="cancelReservation" class="bg-red-500 text-white px-3 py-1 rounded">Cancel Reservation</button>
-    </section>
+    <!-- Active Reservation -->
+    <div v-if="reservation" class="clay-card mb-4">
+      <h4 class="mb-2">🅿️ Your Active Reservation</h4>
+      <p>Lot: {{ reservation.lot_name }}<br />Spot ID: {{ reservation.spot_id }}<br />Status: {{ reservation.status }}</p>
+      <button @click="cancelReservation" class="btn btn-danger mt-2">Cancel Reservation</button>
+    </div>
 
-    <!-- 🟦 Recent Parking History -->
-    <section class="mt-4">
-    <h3 class="text-lg font-semibold mb-2">📜 Recent Parking History</h3>
-    <table class="table-auto w-full border border-gray-300">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="px-4 py-2">ID</th>
-                <th class="px-4 py-2">Location</th>
-                <th class="px-4 py-2">Vehicle #</th>
-                <th class="px-4 py-2">Timestamp</th>
-                <th class="px-4 py-2">Action</th>
+    <!-- Parking History -->
+    <div class="clay-card mb-4">
+      <h4 class="mb-3">📜 Parking History</h4>
+      <div v-if="reservationHistory.length">
+        <table class="table table-dark table-bordered table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Location</th>
+              <th>Vehicle #</th>
+              <th>Timestamp</th>
+              <th>Status</th>
             </tr>
-        </thead>
-        <div v-if="!isEmpty(reservationHistory)">
-            <tbody v-if="!isEmpty(reservationHistory)">
-                <tr v-for="entry in reservationHistory" :key="entry.id" class="text-center border-t">
-                    <td class="px-4 py-2">{{ entry.id }}</td>
-                    <td class="px-4 py-2">{{ entry.location }}</td>
-                    <td class="px-4 py-2">{{ entry.vehicle_number || '-' }}</td>
-                    <td class="px-4 py-2">{{ entry.timestamp }}</td>
-                    <td class="px-4 py-2">
-                    <span v-if="entry.is_active" class="bg-red-300 text-white px-2 py-1 rounded">Release</span>
-                    <span v-else class="bg-green-300 text-black px-2 py-1 rounded">Parked Out</span>
-                    </td>
-                </tr>
-            </tbody>
-        </div>
-        <div v-else>No Parking History</div>
-    </table>
-    </section>
+          </thead>
+          <tbody>
+            <tr v-for="entry in reservationHistory" :key="entry.id">
+              <td>{{ entry.id }}</td>
+              <td>{{ entry.location }}</td>
+              <td>{{ entry.vehicle_number || '-' }}</td>
+              <td>{{ entry.timestamp }}</td>
+              <td>
+                <span class="badge" :class="entry.is_active ? 'bg-danger' : 'bg-success'">
+                  {{ entry.is_active ? 'Release' : 'Parked Out' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else>No Parking History</p>
+    </div>
 
-
-    <!-- 🟦 Available Lots -->
-    <section class="mt-6">
-      <h3>🅿️ Available Parking Lots</h3>
-      <ul v-if="parkingLots.length > 0">
-        <li v-for="lot in parkingLots" :key="lot.id" class="my-2">
-          <strong>{{ lot.name }}</strong> - {{ lot.location }} (₹{{ lot.price || 'N/A' }})
-          <button
-            @click="reserveSpot(lot.id)"
-            :disabled="reservation"
-            class="ml-4 bg-blue-500 text-white px-3 py-1 rounded"
-          >
-            Book
-          </button>
+    <!-- Available Lots -->
+    <div class="clay-card mb-4">
+      <h4 class="mb-3">🅿️ Available Parking Lots</h4>
+      <ul class="list-group">
+        <li v-for="lot in parkingLots" :key="lot.id" class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
+          <span><strong>{{ lot.name }}</strong> - {{ lot.location }} (₹{{ lot.price || 'N/A' }})</span>
+          <button @click="reserveSpot(lot.id)" :disabled="reservation" class="btn btn-outline-primary btn-sm">Book</button>
         </li>
       </ul>
-      <p v-else>No parking lots available.</p>
-    </section>
+    </div>
 
-    <!-- 🔓 Logout -->
-    <button @click="logout" class="mt-8 bg-gray-800 text-white px-4 py-2 rounded">Logout</button>
+    <button @click="logout" class="btn btn-outline-light mt-4">Logout</button>
   </div>
 </template>
+
 
 <script setup>
 import { useAuthStore } from '../stores/auth'
@@ -221,3 +210,17 @@ const logout = () => {
   router.push('/login')
 }
 </script>
+
+
+<style scoped>
+.user-dashboard-wrapper {
+  color: #e0e0e0;
+}
+
+.clay-card {
+  background: #2c2c3c;
+  border-radius: 20px;
+  box-shadow: 8px 8px 15px #1a1a28, -8px -8px 15px #3a3a4c;
+  padding: 1.5rem;
+}
+</style>

@@ -1,68 +1,72 @@
 <template>
-  <div class="p-4">
-    <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+  <div class="container py-4">
+    <h2 class="display-6 text-white mb-4 shadow-text">🛠️ Admin Dashboard</h2>
 
-    <!-- ✅ Create New Parking Lot -->
-    <section class="mb-8">
-      <h3 class="text-xl font-semibold mb-2">Create New Parking Lot</h3>
-      <div class="flex flex-col gap-2 max-w-md">
-        <input v-model="newLotName" placeholder="Lot Name" class="border p-2 rounded" />
-        <input v-model="newLotLocation" placeholder="Location" class="border p-2 rounded" />
-        <input v-model.number="newLotPrice" type="number" placeholder="Price per Hour" class="border p-2 rounded" />
-        <input v-model.number="newLotSpots" type="number" placeholder="Number of Spots" class="border p-2 rounded" />
-        <button @click="createLot" class="bg-green-600 text-white px-4 py-2 rounded w-fit">+ Create Lot</button>
+    <!-- Create Lot -->
+    <div class="clay-card mb-5 p-4">
+      <h4 class="mb-3">Create New Parking Lot</h4>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <input v-model="newLotName" class="form-control" placeholder="Lot Name" />
+        </div>
+        <div class="col-md-6">
+          <input v-model="newLotLocation" class="form-control" placeholder="Location" />
+        </div>
+        <div class="col-md-6">
+          <input v-model.number="newLotPrice" type="number" class="form-control" placeholder="Price per Hour" />
+        </div>
+        <div class="col-md-6">
+          <input v-model.number="newLotSpots" type="number" class="form-control" placeholder="Number of Spots" />
+        </div>
+        <div class="col-12 text-end">
+          <button class="btn btn-success mt-2" @click="createLot">+ Create Lot</button>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- ✅ List of Users -->
-    <section class="mb-8">
-      <h3 class="text-xl font-semibold mb-2">Users</h3>
-      <ul>
-        <li v-for="user in users" :key="user.id" class="mb-1">
-          {{ user.email }} — <span class="text-gray-600">{{ user.role }}</span>
+    <!-- Users -->
+    <div class="clay-card mb-5 p-4">
+      <h4>👥 All Users</h4>
+      <ul class="list-group mt-2">
+        <li class="list-group-item bg-dark text-white" v-for="user in users" :key="user.id">
+          {{ user.email }} <span class="badge bg-secondary ms-2">{{ user.role }}</span>
         </li>
       </ul>
-    </section>
+    </div>
 
-    <!-- ✅ Parking Lots + Add Spot -->
-    <section>
-      <h3 class="text-xl font-semibold mb-2">Parking Lots</h3>
-      <ul>
-        <li v-for="lot in parkingLots" :key="lot.id" class="mb-2">
-          <strong>{{ lot.name }}</strong> ({{ lot.location }}) — ₹{{ lot.price }}/hr
-          <button @click="selectLot(lot)" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded">Add Spot</button>
+    <!-- Parking Lots -->
+    <div class="clay-card mb-4 p-4">
+      <h4>🏢 Parking Lots</h4>
+      <ul class="list-group mt-2">
+        <li class="list-group-item bg-dark text-white" v-for="lot in parkingLots" :key="lot.id">
+          <strong>{{ lot.name }}</strong> — {{ lot.location }} (₹{{ lot.price }}/hr)
+          <button class="btn btn-sm btn-primary float-end" @click="selectLot(lot)">+ Add Spot</button>
         </li>
       </ul>
-    </section>
+    </div>
 
-    <!-- ✅ Add Spot UI -->
-    <section v-if="selectedLot" class="mt-6">
-      <h4 class="text-lg font-semibold mb-2">Add Spot to {{ selectedLot.name }}</h4>
-      <button @click="addSpot" class="bg-purple-600 text-white px-3 py-1 rounded">+ Add Spot</button>
-      <p v-if="addMessage" class="text-green-700 mt-2">{{ addMessage }}</p>
-    </section>
-
-    <!-- 🔓 Logout -->
-    <div class="mt-8">
-      <button @click="logout" class="bg-gray-800 text-white px-4 py-2 rounded">Logout</button>
+    <!-- Add Spot -->
+    <div v-if="selectedLot" class="clay-card p-4">
+      <h5>Add Spot to <span class="text-info">{{ selectedLot.name }}</span></h5>
+      <button class="btn btn-purple mt-2" @click="addSpot">+ Add Spot</button>
+      <p v-if="addMessage" class="mt-2 text-success">{{ addMessage }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const auth = useAuthStore()
 const router = useRouter()
+const auth = useAuthStore()
 
 const users = ref([])
 const parkingLots = ref([])
 const selectedLot = ref(null)
 const addMessage = ref('')
 
-// For create lot
 const newLotName = ref('')
 const newLotLocation = ref('')
 const newLotPrice = ref(10)
@@ -74,34 +78,19 @@ onMounted(() => {
 })
 
 const fetchUsers = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await fetch('http://127.0.0.1:5000/api/admin/users', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    users.value = await res.json()
-  } catch (err) {
-    console.error('Failed to fetch users', err)
-  }
+  const token = localStorage.getItem('token')
+  const res = await fetch('http://127.0.0.1:5000/api/admin/users', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  users.value = await res.json()
 }
 
 const fetchLots = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    parkingLots.value = await res.json()
-    console.log("parkingLots", parkingLots)
-  } catch (err) {
-    console.error('Failed to fetch lots', err)
-  }
+  const token = localStorage.getItem('token')
+  const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  parkingLots.value = await res.json()
 }
 
 const selectLot = (lot) => {
@@ -110,65 +99,60 @@ const selectLot = (lot) => {
 }
 
 const addSpot = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await fetch(`http://127.0.0.1:5000/api/admin/parking-spots`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        lot_id: selectedLot.value.id,
-        count: 1
-      })
-    })
-    const data = await res.json()
-    if (res.ok) {
-      addMessage.value = '✅ Spot added successfully!'
-    } else {
-      addMessage.value = data.message || '❌ Failed to add spot'
-    }
-  } catch (err) {
-    addMessage.value = '❌ Something went wrong'
-    console.error(err)
-  }
+  const token = localStorage.getItem('token')
+  const res = await fetch('http://127.0.0.1:5000/api/admin/parking-spots', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ lot_id: selectedLot.value.id, count: 1 })
+  })
+  const data = await res.json()
+  addMessage.value = res.ok ? '✅ Spot added successfully!' : `❌ ${data.message}`
 }
 
 const createLot = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: newLotName.value,
-        location: newLotLocation.value,
-        price: newLotPrice.value,
-        spots: newLotSpots.value
-      })
+  const token = localStorage.getItem('token')
+  const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: newLotName.value,
+      location: newLotLocation.value,
+      price: newLotPrice.value,
+      spots: newLotSpots.value
     })
+  })
 
-    const data = await res.json()
-    if (res.ok) {
-      alert('✅ Parking lot created')
-      fetchLots()
-      newLotName.value = ''
-      newLotLocation.value = ''
-      newLotPrice.value = 10
-    } else {
-      alert(`❌ ${data.message || 'Failed to create lot'}`)
-    }
-  } catch (err) {
-    console.error('Error creating lot:', err)
+  const data = await res.json()
+  if (res.ok) {
+    alert('✅ Parking lot created')
+    fetchLots()
+    newLotName.value = ''
+    newLotLocation.value = ''
+    newLotPrice.value = 10
+  } else {
+    alert(`❌ ${data.message || 'Failed to create lot'}`)
   }
 }
-
-const logout = () => {
-  auth.logout()
-  router.push('/login')
-}
 </script>
+
+<style scoped>
+.clay-card {
+  background: #2b2b2b;
+  border-radius: 16px;
+  box-shadow: 8px 8px 20px #1c1c1c, -8px -8px 20px #3c3c3c;
+  color: white;
+}
+.btn-purple {
+  background-color: #7c3aed;
+  color: white;
+}
+.shadow-text {
+  text-shadow: 2px 2px 5px #000;
+}
+</style>

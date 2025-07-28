@@ -1,80 +1,56 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
 import Navbar from './components/Navbar.vue'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+
+const route = useRoute()
+
+// ✅ This makes it reactive on route change
+const hideNavbar = computed(() => ['login', 'register'].includes(route.name))
 </script>
 
 <template>
-  <header>
-
-    <div class="wrapper">
-
-      <Navbar/>
+  <div class="app-wrapper">
+    <div class="background-gif"></div>
+    <div class="foreground-container">
+      <Navbar v-if="!hideNavbar" />
       <router-view />
     </div>
-  </header>
-
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.app-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* background-color: #111; Fallback */
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
+/* Background GIF layer */
+.background-gif {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  height: 100%;
+  background-image: url('/Users/varundhand/Desktop/IITM/mad 2 final project /vehicle_parking_app_24dp2000034/frontend/frontend/src/assets/iitm-bg.gif');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.55;
+  filter: blur(2px);
+  pointer-events: none;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+/* Foreground layout above background */
+.foreground-container {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
 </style>

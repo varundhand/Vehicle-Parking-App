@@ -1,24 +1,27 @@
 <template>
-  <div class="p-4">
-    <h2 class="text-xl font-bold mb-4">👥 All Users</h2>
-    <table class="w-full border border-gray-300">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-4 py-2">ID</th>
-          <th class="px-4 py-2">Email</th>
-          <th class="px-4 py-2">Role</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in users" :key="user.id" class="border-t text-center">
-          <td class="px-4 py-2">{{ user.id }}</td>
-          <td class="px-4 py-2">{{ user.email }}</td>
-          <td class="px-4 py-2">{{ user.role }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="users-view p-4">
+    <div class="clay-card">
+      <h2 class="text-light fs-4 fw-bold mb-4">👥 All Users</h2>
+      <table class="table table-dark table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id">
+            <td>{{ user.id }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -39,3 +42,13 @@ onMounted(() => {
   fetchUsers()
 })
 </script>
+
+
+<style scoped>
+.clay-card {
+  background: #2b2b3c;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 10px 10px 20px #1c1c2b, -10px -10px 20px #3a3a4a;
+}
+</style>
