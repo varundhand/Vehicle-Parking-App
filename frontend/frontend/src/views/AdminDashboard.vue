@@ -1,34 +1,50 @@
 <template>
-  <div>
-    <h2>Admin Dashboard</h2>
+  <div class="p-4">
+    <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
 
-    <section>
-      <h3>Users</h3>
+    <!-- ✅ Create New Parking Lot -->
+    <section class="mb-8">
+      <h3 class="text-xl font-semibold mb-2">Create New Parking Lot</h3>
+      <div class="flex flex-col gap-2 max-w-md">
+        <input v-model="newLotName" placeholder="Lot Name" class="border p-2 rounded" />
+        <input v-model="newLotLocation" placeholder="Location" class="border p-2 rounded" />
+        <input v-model.number="newLotPrice" type="number" placeholder="Price per Hour" class="border p-2 rounded" />
+        <input v-model.number="newLotSpots" type="number" placeholder="Number of Spots" class="border p-2 rounded" />
+        <button @click="createLot" class="bg-green-600 text-white px-4 py-2 rounded w-fit">+ Create Lot</button>
+      </div>
+    </section>
+
+    <!-- ✅ List of Users -->
+    <section class="mb-8">
+      <h3 class="text-xl font-semibold mb-2">Users</h3>
       <ul>
-        <li v-for="user in users" :key="user.id">
-          {{ user.email }} - {{ user.role }}
+        <li v-for="user in users" :key="user.id" class="mb-1">
+          {{ user.email }} — <span class="text-gray-600">{{ user.role }}</span>
         </li>
       </ul>
     </section>
 
+    <!-- ✅ Parking Lots + Add Spot -->
     <section>
-      <h3>Parking Lots</h3>
+      <h3 class="text-xl font-semibold mb-2">Parking Lots</h3>
       <ul>
-        <li v-for="lot in parkingLots" :key="lot.id">
-          {{ lot.name }} ({{ lot.location }})
-          <button @click="selectLot(lot)">Add Spot</button>
+        <li v-for="lot in parkingLots" :key="lot.id" class="mb-2">
+          <strong>{{ lot.name }}</strong> ({{ lot.location }}) — ₹{{ lot.price }}/hr
+          <button @click="selectLot(lot)" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded">Add Spot</button>
         </li>
       </ul>
     </section>
 
-    <section v-if="selectedLot">
-      <h4>Add Spot to {{ selectedLot.name }}</h4>
-      <button @click="addSpot">+ Add Spot</button>
-      <p v-if="addMessage">{{ addMessage }}</p>
+    <!-- ✅ Add Spot UI -->
+    <section v-if="selectedLot" class="mt-6">
+      <h4 class="text-lg font-semibold mb-2">Add Spot to {{ selectedLot.name }}</h4>
+      <button @click="addSpot" class="bg-purple-600 text-white px-3 py-1 rounded">+ Add Spot</button>
+      <p v-if="addMessage" class="text-green-700 mt-2">{{ addMessage }}</p>
     </section>
 
-    <div class="logoutButtonWrapper">
-         <button @click="logout">Logout</button>
+    <!-- 🔓 Logout -->
+    <div class="mt-8">
+      <button @click="logout" class="bg-gray-800 text-white px-4 py-2 rounded">Logout</button>
     </div>
   </div>
 </template>
@@ -46,7 +62,12 @@ const parkingLots = ref([])
 const selectedLot = ref(null)
 const addMessage = ref('')
 
-// Fetch all users and parking lots when component loads
+// For create lot
+const newLotName = ref('')
+const newLotLocation = ref('')
+const newLotPrice = ref(10)
+const newLotSpots = ref(0)
+
 onMounted(() => {
   fetchUsers()
   fetchLots()
@@ -77,6 +98,7 @@ const fetchLots = async () => {
       }
     })
     parkingLots.value = await res.json()
+    console.log("parkingLots", parkingLots)
   } catch (err) {
     console.error('Failed to fetch lots', err)
   }
@@ -103,13 +125,45 @@ const addSpot = async () => {
     })
     const data = await res.json()
     if (res.ok) {
-      addMessage.value = 'Spot added successfully!'
+      addMessage.value = '✅ Spot added successfully!'
     } else {
-      addMessage.value = data.message || 'Failed to add spot'
+      addMessage.value = data.message || '❌ Failed to add spot'
     }
   } catch (err) {
-    addMessage.value = 'Something went wrong'
+    addMessage.value = '❌ Something went wrong'
     console.error(err)
+  }
+}
+
+const createLot = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('http://127.0.0.1:5000/api/admin/parking-lots', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: newLotName.value,
+        location: newLotLocation.value,
+        price: newLotPrice.value,
+        spots: newLotSpots.value
+      })
+    })
+
+    const data = await res.json()
+    if (res.ok) {
+      alert('✅ Parking lot created')
+      fetchLots()
+      newLotName.value = ''
+      newLotLocation.value = ''
+      newLotPrice.value = 10
+    } else {
+      alert(`❌ ${data.message || 'Failed to create lot'}`)
+    }
+  } catch (err) {
+    console.error('Error creating lot:', err)
   }
 }
 

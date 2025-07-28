@@ -122,10 +122,10 @@ const fetchReservation = async () => {
 //   }
     if (res.ok){
         const data = await res.json()
-        console.log("data",data)
+        // console.log("data",data)
         reservation.value = data.reservation
         // reservation.
-        console.log("reservation ref",reservation)
+        // console.log("reservation ref",reservation)
     }else{
         reservation.value=null
     }

@@ -1,4 +1,5 @@
 # import datetime
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db
@@ -44,11 +45,12 @@ def reserve_spot():
 
     return jsonify({"message": "Spot reserved", "spot_id": available_spot.id}), 201
 
+# Retrieve user's current reservation
 @user_bp.route('/reservation', methods=['GET'])
 @jwt_required()
 def view_reservation():
     identity = get_jwt_identity()
-    print("indentity: ",identity)
+    print("indentity: ",identity['id'])
     user_id = identity['id']
     reservation = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
 
@@ -65,23 +67,39 @@ def view_reservation():
         }
     })
 
+# Cancel user's reservation and update the cost 
 @user_bp.route('/reservation', methods=['DELETE'])
 @jwt_required()
 def cancel_reservation():
     identity = get_jwt_identity()
     user_id = identity['id']
-    reservation = Reservation.query.filter_by(user_id=user_id,is_active=True).first()
+    reservation = Reservation.query.filter_by(user_id=user_id, is_active=True).first()
 
     if not reservation:
         return jsonify({"message": "No active reservation"}), 404
 
     reservation.spot.status = 'A'
     reservation.is_active = False
-    reservation.leaving_timestamp = db.func.now()  
-    # db.session.delete(reservation)
+    reservation.leaving_timestamp = db.func.now()
+
+    # ✅ Calculate duration in hours (rounded up)
+    start = reservation.parking_timestamp
+    end = datetime.utcnow()
+    duration_in_hours = (end - start).total_seconds() / 3600
+    duration_in_hours = max(1, round(duration_in_hours))  # Minimum 1 hour
+
+    # ✅ Use lot's hourly rate if available, else default ₹10/hr
+    rate = reservation.spot.lot.price or 10
+    reservation.parking_cost = round(duration_in_hours * rate, 2)
+
     db.session.commit()
 
-    return jsonify({"message": "Reservation cancelled"}), 200
+    return jsonify({
+        "message": "Reservation cancelled",
+        "duration_hours": duration_in_hours,
+        "cost": reservation.parking_cost
+    }), 200
+
     
 # Get reservation history for the user
 @user_bp.route('/reservations/history', methods=['GET'])
@@ -104,6 +122,25 @@ def reservation_history():
     
     return jsonify(result), 200
 
+# Returns user's reservation count per lot 
+@user_bp.route('/summary/history', methods=['GET'])
+@jwt_required()
+def user_summary():
+    user_id = get_jwt_identity()['id']
+
+    reservations = (
+        db.session.query(ParkingLot.name, db.func.count(Reservation.id))
+        .join(ParkingSpot, ParkingSpot.id == Reservation.spot_id)
+        .join(ParkingLot, ParkingLot.id == ParkingSpot.lot_id)
+        .filter(Reservation.user_id == user_id)
+        .group_by(ParkingLot.name)
+        .all()
+    )
+
+    result = [{"lot": lot, "count": count} for lot, count in reservations]
+    return jsonify(result), 200
+
+
 # Get all parking lots for the user
 @user_bp.route('/parking-lots', methods=['GET'])
 @jwt_required()
@@ -113,7 +150,61 @@ def get_parking_lots_for_user():
         {
             "id": lot.id,
             "name": lot.name,
-            "location": lot.location
+            "location": lot.location,
+            "price": lot.price
         }
         for lot in lots
     ]), 200
+
+# Update user profile
+@user_bp.route('/update-profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    user_id = get_jwt_identity()['id']
+    data = request.json
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user.full_name = data.get('full_name', user.full_name)
+    user.address = data.get('address', user.address)
+    user.pincode = data.get('pincode', user.pincode)
+
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully"}), 200
+
+# Search parking lots by location or lot name
+@user_bp.route('/search-lots', methods=['GET'])
+@jwt_required()
+def search_lots():
+    location = request.args.get('location')
+    name = request.args.get('name')
+
+    if not location and not name:
+        return jsonify({"message": "Search query is required"}), 400
+
+    query = ParkingLot.query
+
+    if location:
+        query = query.filter(ParkingLot.location.ilike(f"%{location}%"))
+    elif name:
+        query = query.filter(ParkingLot.name.ilike(f"%{name}%"))
+
+    lots = query.all()
+    result = []
+
+    for lot in lots:
+        total_spots = len(lot.spots)
+        available_spots = len([s for s in lot.spots if s.status == 'A'])
+
+        result.append({
+            "id": lot.id,
+            "name": lot.name,
+            "location": lot.location,
+            "total_spots": total_spots,
+            "available_spots": available_spots,
+        })
+
+    return jsonify(result), 200
+

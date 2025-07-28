@@ -6,6 +6,7 @@ class ParkingLot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(255), nullable=False)
+    price = db.Column(db.Float, nullable=False, default=10.0)
 
     spots = db.relationship('ParkingSpot', backref='lot', cascade="all, delete-orphan") # one-to-many relationship with ParkingSpot
     def __repr__(self):

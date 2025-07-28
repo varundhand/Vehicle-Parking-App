@@ -36,6 +36,7 @@ CORS(app, supports_credentials=True, origins=[
     "http://localhost:5192", 
     "http://localhost:5193", 
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
     "http://127.0.0.1:5180",
     "http://127.0.0.1:5187",  # 👈 Add both localhost and 127.0.0.1
     "http://127.0.0.1:5188",
