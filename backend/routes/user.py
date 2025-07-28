@@ -7,6 +7,8 @@ from models.parking_lot import ParkingLot
 from models.parking_spot import ParkingSpot
 from models.reservation import Reservation
 from models.user import User
+from redis_client import redis_client
+import json
 
 user_bp = Blueprint('user', __name__)
 
@@ -42,6 +44,13 @@ def reserve_spot():
     reservation = Reservation(user_id=user_id, spot_id=available_spot.id)
     db.session.add(reservation)
     db.session.commit()
+
+    # Update the Redis cache to remove the reserved spot
+    redis_client.delete("user:parking_lots")
+    
+    # Invalidate all user search cache
+    for key in redis_client.scan_iter("user:search:*"):
+        redis_client.delete(key)
 
     return jsonify({"message": "Spot reserved", "spot_id": available_spot.id}), 201
 
@@ -94,6 +103,15 @@ def cancel_reservation():
 
     db.session.commit()
 
+    # ❌ Invalidate parking lot cache
+    redis_client.delete("user:parking_lots")
+
+    # Invalidate all user search cache
+    for key in redis_client.scan_iter("user:search:*"):
+        redis_client.delete(key)
+
+
+
     return jsonify({
         "message": "Reservation cancelled",
         "duration_hours": duration_in_hours,
@@ -145,8 +163,14 @@ def user_summary():
 @user_bp.route('/parking-lots', methods=['GET'])
 @jwt_required()
 def get_parking_lots_for_user():
+    cache_key = "user:parking_lots"
+    cached_data = redis_client.get(cache_key)
+
+    if cached_data:
+        return jsonify(json.loads(cached_data)), 200
+
     lots = ParkingLot.query.all()
-    return jsonify([
+    response = [
         {
             "id": lot.id,
             "name": lot.name,
@@ -154,7 +178,13 @@ def get_parking_lots_for_user():
             "price": lot.price
         }
         for lot in lots
-    ]), 200
+    ]
+
+    # ⏱ Set cache with 5 minutes expiry
+    redis_client.setex(cache_key, 300, json.dumps(response))
+
+    return jsonify(response), 200
+
 
 # Update user profile
 @user_bp.route('/update-profile', methods=['PUT'])
@@ -184,8 +214,13 @@ def search_lots():
     if not location and not name:
         return jsonify({"message": "Search query is required"}), 400
 
-    query = ParkingLot.query
+    cache_key = f"user:search:{location or ''}:{name or ''}".lower()
+    cached_data = redis_client.get(cache_key)
 
+    if cached_data:
+        return jsonify(json.loads(cached_data)), 200
+
+    query = ParkingLot.query
     if location:
         query = query.filter(ParkingLot.location.ilike(f"%{location}%"))
     elif name:
@@ -206,5 +241,7 @@ def search_lots():
             "available_spots": available_spots,
         })
 
-    return jsonify(result), 200
+    # ✅ Cache the result for 3 minutes
+    redis_client.setex(cache_key, 180, json.dumps(result))
 
+    return jsonify(result), 200

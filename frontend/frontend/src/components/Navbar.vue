@@ -1,7 +1,8 @@
 <template>
   <nav class="navbar navbar-expand-lg vp-navbar-dark glass-shadow-dark px-4 py-3">
     <div class="container-fluid">
-      <span class="navbar-brand fw-bold text-white">🚗 Parking App</span>
+      <img src="@/assets/parkmate-transparent.png" alt="Parking App" class="navbar-brand-img" />
+
 
       <div class="collapse navbar-collapse justify-content-end">
         <ul class="navbar-nav gap-3">
@@ -61,5 +62,9 @@ const logout = () => {
   box-shadow:
     4px 4px 12px rgba(0, 0, 0, 0.5),
     -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+.navbar-brand-img {
+  height: 50px;  /* Try a larger height */
+  width: auto;
 }
 </style>

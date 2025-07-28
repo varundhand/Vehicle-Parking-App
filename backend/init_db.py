@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask import jsonify
 
-from config import DATABASE_URL, JWT_SECRET_KEY
+from config import DATABASE_URL, JWT_SECRET_KEY, redis_client  # Import Redis client
 from models import db
 from models.user import User
 from models.parking_lot import ParkingLot
@@ -23,12 +23,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 
 # ✅ CORS setup (allow requests from Vue dev server)
-# CORS(app, resources={r"/api/*": {"origins": "http://localhost:5176"}}, supports_credentials=True)
 CORS(app, supports_credentials=True, origins=[
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5180",
-    "http://localhost:5187",  # 👈 YOUR CURRENT FRONTEND PORT
+    "http://localhost:5187",
     "http://localhost:5188", 
     "http://localhost:5189", 
     "http://localhost:5190", 
@@ -38,7 +37,7 @@ CORS(app, supports_credentials=True, origins=[
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
     "http://127.0.0.1:5180",
-    "http://127.0.0.1:5187",  # 👈 Add both localhost and 127.0.0.1
+    "http://127.0.0.1:5187",
     "http://127.0.0.1:5188",
     "http://127.0.0.1:5189",
     "http://127.0.0.1:5190",
@@ -46,6 +45,7 @@ CORS(app, supports_credentials=True, origins=[
     "http://127.0.0.1:5192",
     "http://127.0.0.1:5193",
 ])
+
 # Initialize extensions
 db.init_app(app)
 jwt = JWTManager(app)
@@ -61,9 +61,20 @@ app.register_blueprint(user_bp, url_prefix="/api/user")
 def test_options():
     return "OK", 200
 
+# ✅ Test Redis connection
+def test_redis():
+    try:
+        redis_client.ping()
+        print("✅ Redis connection successful!")
+    except Exception as e:
+        print(f"❌ Redis connection failed: {e}")
+
 # ✅ Run and initialize DB
 if __name__ == "__main__":
     with app.app_context():
+        # Test Redis connection
+        test_redis()
+        
         db.drop_all()
         db.create_all()
 

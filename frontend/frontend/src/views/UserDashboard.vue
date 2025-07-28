@@ -41,18 +41,31 @@
       <p v-else>No Parking History</p>
     </div>
 
-    <!-- Available Lots -->
-    <div class="clay-card mb-4">
-      <h4 class="mb-3">🅿️ Available Parking Lots</h4>
-      <ul class="list-group">
-        <li v-for="lot in parkingLots" :key="lot.id" class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center">
-          <span><strong>{{ lot.name }}</strong> - {{ lot.location }} (₹{{ lot.price || 'N/A' }})</span>
-          <button @click="reserveSpot(lot.id)" :disabled="reservation" class="btn btn-outline-primary btn-sm">Book</button>
-        </li>
-      </ul>
-    </div>
+    <!-- Search + Results -->
+<div class="clay-card mb-4">
+  <h4 class="mb-3">🔍 Search Parking @location/pin code</h4>
+  <form @submit.prevent="searchLots" class="mb-3 d-flex align-items-center gap-2">
+    <input v-model="searchQuery" type="text" class="form-control form-control-dark" placeholder="Enter location or pin" />
+    <button class="btn btn-outline-info">Search</button>
+  </form>
 
-    <button @click="logout" class="btn btn-outline-light mt-4">Logout</button>
+  <div v-if="searchResults.length">
+    <h5 class="mb-3">Parking Lots @ "{{ searchQuery }}"</h5>
+    <ul class="list-group">
+      <li
+        v-for="lot in searchResults"
+        :key="lot.id"
+        class="list-group-item bg-dark text-light d-flex justify-content-between align-items-center"
+      >
+        <span><strong>{{ lot.name }}</strong> - {{ lot.location }} | Available: {{ lot.available_spots }}</span>
+        <button @click="reserveSpot(lot.id)" :disabled="reservation" class="btn btn-outline-primary btn-sm">Book</button>
+      </li>
+    </ul>
+  </div>
+  <p v-else-if="searchPerformed">No results found for "{{ searchQuery }}"</p>
+</div>
+
+
   </div>
 </template>
 
@@ -72,6 +85,38 @@ const token = localStorage.getItem('token')
 const parkingLots = ref([])
 const reservation = ref(null)
 const reservationHistory = ref([])
+
+const searchQuery = ref('')
+const searchResults = ref([])
+const searchPerformed = ref(false)
+
+const searchLots = async () => {
+  if (!searchQuery.value.trim()) return
+
+  try {
+    const queryParam = encodeURIComponent(searchQuery.value)
+    const res = await fetch(
+      `http://127.0.0.1:5000/api/user/search-lots?location=${queryParam}&name=${queryParam}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      searchResults.value = data
+      searchPerformed.value = true
+    } else {
+      searchResults.value = []
+      searchPerformed.value = true
+    }
+  } catch (error) {
+    console.error("Search failed", error)
+    searchResults.value = []
+    searchPerformed.value = true
+  }
+}
+
+
 
 const fetchParkingLots = async () => {
   try {
