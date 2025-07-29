@@ -3,8 +3,13 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask import jsonify
+from flask_mail import Mail
 
-from config import DATABASE_URL, JWT_SECRET_KEY, redis_client  # Import Redis client
+from config import (
+    DATABASE_URL, JWT_SECRET_KEY, redis_client,
+    MAIL_SERVER, MAIL_PORT, MAIL_USE_TLS, 
+    MAIL_USERNAME, MAIL_PASSWORD, MAIL_DEFAULT_SENDER
+)
 from models import db
 from models.user import User
 from models.parking_lot import ParkingLot
@@ -21,6 +26,14 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+
+# Configure Flask-Mail
+app.config['MAIL_SERVER'] = MAIL_SERVER
+app.config['MAIL_PORT'] = MAIL_PORT
+app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
+app.config['MAIL_USERNAME'] = MAIL_USERNAME
+app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+app.config['MAIL_DEFAULT_SENDER'] = MAIL_DEFAULT_SENDER
 
 # ✅ CORS setup (allow requests from Vue dev server)
 CORS(app, supports_credentials=True, origins=[
@@ -50,6 +63,7 @@ CORS(app, supports_credentials=True, origins=[
 db.init_app(app)
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
+mail = Mail(app)  # Initialize Flask-Mail
 
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix="/api/auth")

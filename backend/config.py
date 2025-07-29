@@ -25,3 +25,11 @@ redis_client = redis.StrictRedis(
     db=REDIS_DB, 
     decode_responses=True
 )
+
+# for sending emails
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USE_TLS = True
+MAIL_USERNAME = '24dp2000034@ds.study.iitm.ac.in'
+MAIL_PASSWORD = 'qpifohqbyoarznrx'
+MAIL_DEFAULT_SENDER = MAIL_USERNAME

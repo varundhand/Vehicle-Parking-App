@@ -1,14 +1,22 @@
 # import datetime
-from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db
-from models.parking_lot import ParkingLot
-from models.parking_spot import ParkingSpot
-from models.reservation import Reservation
 from models.user import User
-from redis_client import redis_client
+from models.reservation import Reservation
+from tasks.email_tasks import (
+    send_reminder_email, 
+    send_daily_reminders, 
+    send_monthly_reports,
+    generate_monthly_report,
+    export_csv_email
+)
+import datetime
 import json
+from models.parking_spot import ParkingSpot
+from models.parking_lot import ParkingLot
+from config import redis_client
+from datetime import datetime
 
 user_bp = Blueprint('user', __name__)
 
@@ -245,3 +253,196 @@ def search_lots():
     redis_client.setex(cache_key, 180, json.dumps(result))
 
     return jsonify(result), 200
+
+# ============== EMAIL TEST ROUTES ==============
+@user_bp.route('/test-email', methods=['POST'])
+@jwt_required()
+def test_email():
+    """Test sending a simple reminder email"""
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user['id']
+        
+        # Query user from database using ID
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Send test reminder email
+        task = send_reminder_email.delay(user.email, user.full_name)
+        
+        return jsonify({
+            "message": f"Test email queued for {user.email}",
+            "task_id": task.id,
+            "status": "Email will be sent shortly"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@user_bp.route('/test-daily-reminders', methods=['POST'])
+@jwt_required()
+def test_daily_reminders():
+    """Test sending daily reminders to all users with active reservations"""
+    try:
+        # This will send reminders to ALL users with active reservations
+        task = send_daily_reminders.delay()
+        
+        return jsonify({
+            "message": "Daily reminders initiated",
+            "task_id": task.id,
+            "status": "Reminders will be sent to users with active reservations"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_bp.route('/test-monthly-report', methods=['POST'])
+@jwt_required()  
+def test_monthly_report():
+    """Test sending monthly report to current user"""
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user['id']  # Use ID instead of email
+        
+        user = User.query.get(user_id)  # Query by ID
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+            
+        # Count user's reservations for the report
+        reservation_count = Reservation.query.filter_by(user_id=user.id).count()
+        
+        # Send monthly report to current user
+        task = generate_monthly_report.delay(user.id, user.email, user.full_name, reservation_count)
+        
+        return jsonify({
+            "message": f"Monthly report queued for {user.email}",
+            "task_id": task.id,
+            "reservation_count": reservation_count,
+            "status": "Monthly report will be sent shortly"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_bp.route('/test-all-monthly-reports', methods=['POST'])
+@jwt_required()
+def test_all_monthly_reports():
+    """Test sending monthly reports to ALL users"""
+    try:
+        # This will send monthly reports to ALL users
+        task = send_monthly_reports.delay()
+        
+        return jsonify({
+            "message": "Monthly reports initiated for all users",
+            "task_id": task.id,
+            "status": "Reports will be sent to all users"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_bp.route('/export-csv', methods=['POST'])
+@jwt_required()
+def export_csv():
+    """Export user's parking history as CSV via email"""
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user['id']  # Use ID instead of email
+        
+        user = User.query.get(user_id)  # Query by ID
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Export CSV for current user
+        task = export_csv_email.delay(user.id, user.email)
+        
+        return jsonify({
+            "message": f"CSV export queued for {user.email}",
+            "task_id": task.id,
+            "status": "CSV will be emailed shortly"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_bp.route('/email-status/<task_id>', methods=['GET'])
+@jwt_required()
+def check_email_status(task_id):
+    """Check the status of an email task"""
+    try:
+        from celery_app import celery_app
+        
+        task = celery_app.AsyncResult(task_id)
+        
+        if task.state == 'PENDING':
+            response = {
+                'state': task.state,
+                'status': 'Task is waiting to be processed'
+            }
+        elif task.state == 'SUCCESS':
+            response = {
+                'state': task.state,
+                'status': 'Task completed successfully',
+                'result': task.result
+            }
+        elif task.state == 'FAILURE':
+            response = {
+                'state': task.state,
+                'status': 'Task failed',
+                'error': str(task.info)
+            }
+        else:
+            response = {
+                'state': task.state,
+                'status': 'Task is being processed'
+            }
+            
+        return jsonify(response), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# temp debugging
+@user_bp.route('/debug-jwt', methods=['GET'])
+@jwt_required()
+def debug_jwt():
+    identity = get_jwt_identity()
+    return jsonify({"jwt_identity": identity}), 200
+
+
+@user_bp.route('/debug-reservations', methods=['GET'])
+@jwt_required()
+def debug_reservations():
+    """Debug endpoint to check user's reservation data"""
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user['id']
+        
+        # Get all reservations for this user
+        reservations = Reservation.query.filter_by(user_id=user_id).all()
+        
+        result = []
+        for r in reservations:
+            result.append({
+                "id": r.id,
+                "user_id": r.user_id,
+                "spot_id": r.spot_id,
+                "vehicle_number": getattr(r, 'vehicle_number', 'N/A'),
+                "parking_timestamp": r.parking_timestamp.isoformat() if r.parking_timestamp else None,
+                "leaving_timestamp": r.leaving_timestamp.isoformat() if r.leaving_timestamp else None,
+                "is_active": getattr(r, 'is_active', 'N/A')
+            })
+        
+        return jsonify({
+            "user_id": user_id,
+            "total_reservations": len(reservations),
+            "reservations": result
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
